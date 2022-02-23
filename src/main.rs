@@ -7,6 +7,8 @@ use std::{
 
 use syn;
 
+mod cwitem;
+
 fn main() {
     let source_code = read_from_file();
 
@@ -27,8 +29,9 @@ fn write_items_to_files(syntax: syn::File) -> Result<()> {
             syn::Item::Fn(f) => {
                 let filepath = String::from("./out/") + &f.sig.ident.to_string();
                 println!("{}", filepath);
+                let cwi = cwitem::from_item(f.sig.ident.to_string());
                 let mut file = fs::File::create(filepath).unwrap();
-                writeln!(&mut file, "{:#?}", f).unwrap();
+                writeln!(&mut file, "{:#?}", cwi).unwrap();
             },
             _ => continue,
         }

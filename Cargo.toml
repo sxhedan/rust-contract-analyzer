@@ -1,5 +1,5 @@
 [package]
-name = "cosmwasm-analyzer"
+name = "rust-smart-contract-analyzer"
 version = "0.1.0"
 edition = "2018"
 
