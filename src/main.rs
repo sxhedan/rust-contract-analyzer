@@ -7,31 +7,31 @@ use std::{
 
 use syn;
 
-mod cwitem;
+mod cwsyntax;
 
 fn main() {
     let source_code = read_from_file();
 
     let syntax = syn::parse_file(&source_code).unwrap();
-    let _ = write_items_to_files(syntax);
+    let cw_syntax = cwsyntax::CWSyntax::from(syntax);
+    let _ = cw_syntax.print_to_files("./out/");
 }
 
-fn read_from_file() -> String {
+pub fn read_from_file() -> String {
     let filepath = PathBuf::from("./samples/cw20.rs");
     let code = fs::read_to_string(&filepath).unwrap();
     return code;
 }
 
-fn write_items_to_files(syntax: syn::File) -> Result<()> {
-    fs::create_dir_all("./out")?;
+pub fn write_items_to_files(syntax: syn::File) -> Result<()> {
+    fs::create_dir_all("./output_syn")?;
     for item in syntax.items {
         match item {
             syn::Item::Fn(f) => {
-                let filepath = String::from("./out/") + &f.sig.ident.to_string();
+                let filepath = String::from("./output_syn/") + &f.sig.ident.to_string();
                 println!("{}", filepath);
-                let cwi = cwitem::from_item(f.sig.ident.to_string());
                 let mut file = fs::File::create(filepath).unwrap();
-                writeln!(&mut file, "{:#?}", cwi).unwrap();
+                writeln!(&mut file, "{:#?}", f).unwrap();
             },
             _ => continue,
         }
