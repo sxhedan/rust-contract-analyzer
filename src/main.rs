@@ -15,6 +15,8 @@ fn main() {
     let syntax = syn::parse_file(&source_code).unwrap();
     let cw_syntax = cwsyntax::CWSyntax::from(syntax);
     let _ = cw_syntax.print_to_files("./out/");
+    let _ = cw_syntax.check();
+    let _ = cw_syntax.save_results();
 }
 
 pub fn read_from_file() -> String {
