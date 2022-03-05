@@ -26,6 +26,7 @@ impl From<syn::File> for CWSyntax {
             }
             cw_syntax.items.push(cw_item);
         }
+        println!("{:?}", &cw_syntax.msgs);
         cw_syntax
     }
 }
@@ -33,28 +34,22 @@ impl From<syn::File> for CWSyntax {
 impl CWSyntax {
     pub fn parse_execute(&mut self, item: &syn::Item) {
         // update self.msgs
-        match item {
-            syn::Item::Fn(f) => {
-                for s in &f.block.stmts {
-                    match s {
-                        syn::Stmt::Expr(e) => {
-                            match e {
-                                syn::Expr::Match(em) => {
-                                    for arm in &em.arms {
-                                        match &arm.pat {
-                                            syn::Pat::Struct(es) => self.msgs.push(es.path.segments[2].ident.to_string()),
-                                            _ => (),
-                                        }
-                                    }
-                                },
-                                _ => (),
-                            }
-                        },
-                        _ => (),
+        if let Some(f) = get_fn(&item) {
+            let ems = get_matches_in_fn(&f);
+            if ems.len() > 0 {
+                for em in ems {
+                    for arm in &em.arms {
+                        match &arm.pat {
+                            syn::Pat::Struct(es) => {
+                                if es.path.segments.len() > 1 {
+                                    self.msgs.push(es.path.segments[1].ident.to_string())
+                                }
+                            },
+                            _ => (),
+                        }
                     }
                 }
-            },
-            _ => (),
+            }
         }
     }
 
@@ -109,4 +104,29 @@ impl CWItem {
         writeln!(&mut file, "{:#?}", self).unwrap();
         Ok(())
     }
+}
+
+fn get_fn(item: &syn::Item) -> Option<syn::ItemFn> {
+    match item {
+        syn::Item::Fn(f) => Some(f.clone()),
+        _ => None,
+    }
+}
+
+fn get_matches_in_fn(f: &syn::ItemFn) -> Vec<&syn::ExprMatch> {
+    let mut ems = vec![];
+    for s in &f.block.stmts {
+        match s {
+            syn::Stmt::Expr(e) => {
+                match e {
+                    syn::Expr::Match(em) => {
+                        ems.push(em)
+                    },
+                    _ => (),
+                }
+            },
+            _ => (),
+        }
+    }
+    ems
 }
